@@ -1,4 +1,6 @@
 ```sh
+$ cp elasticsearch/ / -r
+$ cd /elasticsearch
 $ mkdir data01 kibanadata
-$ docker-compose up
+$ docker-compose up -d
 ```

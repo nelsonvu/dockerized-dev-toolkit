@@ -6,7 +6,7 @@ services:
     ports:
      - "5432:5432"
     volumes:
-     - /home/namhoaivu/postgres/database:/data/postgres
+     - /postgres/database:/data/postgres
     env_file:
      - docker.env
     restart: unless-stopped

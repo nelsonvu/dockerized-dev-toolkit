@@ -7,6 +7,9 @@ services:
       - '5672:5672'
       # HTTP management UI
       - '15672:15672'
+    volumes:
+      - /rabbitmq/data/:/var/lib/rabbitmq/
+      - /rabbitmq/log/:/var/log/rabbitmq 
     env_file:
-    - docker.env
+      - docker.env
     restart: unless-stopped

@@ -4,7 +4,7 @@ services:
   image : mongo
   container_name: mongodb
   volumes:
-   - /home/namhoaivu/mongodb/database:/data/db
+   - /mongodb/database:/data/db
   env_file:
     - docker.env
   ports:

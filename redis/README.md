@@ -1,4 +1,6 @@
 ```sh
+$ cp redis/ / -r
+$ cd /redis
 $ mkdir cache
-$ docker-compose up
+$ docker-compose up -d
 ```

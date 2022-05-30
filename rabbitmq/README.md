@@ -1,4 +1,6 @@
 ```sh
+$ cp rabbitmq/ / -r
+$ cd /rabbitmq
 $ mkdir data log
-$ docker-compose up
+$ docker-compose up -d
 ```
