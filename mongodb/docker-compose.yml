@@ -1,0 +1,12 @@
+version: "3.3"
+services:
+ mongodb:
+  image : mongo
+  container_name: mongodb
+  volumes:
+   - /home/namhoaivu/mongodb/database:/data/db
+  env_file:
+    - docker.env
+  ports:
+   - 27017:27017
+  restart: unless-stopped
