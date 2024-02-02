@@ -4,9 +4,9 @@ services:
     container_name: postgres
     image: postgres:latest
     ports:
-     - "5432:5432"
+     - "${POSTGRES_PORT}:5432"
     volumes:
-     - /postgres/database:/data/postgres
+     - ./data:/data/postgres
     env_file:
-     - docker.env
+     - .env
     restart: unless-stopped

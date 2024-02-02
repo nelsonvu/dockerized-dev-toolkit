@@ -1,5 +1,5 @@
-
 version: "3"
+
 services:
   es01:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.17.9
@@ -16,7 +16,7 @@ services:
         soft: -1
         hard: -1
     volumes:
-      - ~/elasticsearch/data01:/usr/share/elasticsearch/data
+      - ./data01:/usr/share/elasticsearch/data
     ports:
       - 9200:9200
     networks:
@@ -36,7 +36,7 @@ services:
         soft: -1
         hard: -1
     volumes:
-      - ~/elasticsearch/data02:/usr/share/elasticsearch/data
+      - ./data02:/usr/share/elasticsearch/data
     networks:
       - elastic
   es03:
@@ -54,7 +54,7 @@ services:
         soft: -1
         hard: -1
     volumes:
-      - ~/elasticsearch/data03:/usr/share/elasticsearch/data
+      - ./data03:/usr/share/elasticsearch/data
     networks:
       - elastic
  

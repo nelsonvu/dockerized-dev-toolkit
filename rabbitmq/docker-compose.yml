@@ -4,12 +4,12 @@ services:
     image: 'rabbitmq:3.6-management-alpine'
     ports:
       # The standard AMQP protocol port
-      - '5672:5672'
+      - '${RABBITMQ_PORT}:5672'
       # HTTP management UI
       - '15672:15672'
     volumes:
-      - /rabbitmq/data/:/var/lib/rabbitmq/
-      - /rabbitmq/log/:/var/log/rabbitmq 
+      - ./data/:/var/lib/rabbitmq/
+      - ./log/:/var/log/rabbitmq 
     env_file:
-      - docker.env
+      - .env
     restart: unless-stopped

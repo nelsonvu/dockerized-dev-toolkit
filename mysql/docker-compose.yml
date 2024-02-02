@@ -4,11 +4,10 @@ services:
     image: arm64v8/mysql:oracle
     command: --default-authentication-plugin=mysql_native_pas$
     restart: unless-stopped
-    environment:
-      - MYSQL_DATABASE=admin
-      - MYSQL_ROOT_PASSWORD=root
+    env_file:
+      - .env
     ports:
-      - '3306:3306'
+      - "${MYSQL_PORT}:3306"
     volumes:
-      - ~/mysql/database:/usr/local/mysql
-      - ~/mysql/database/init.sql:/docker-entrypoint-initdb.d$
+      - ./data:/usr/local/mysql
+      - ./data/init.sql:/docker-entrypoint-initdb.d$

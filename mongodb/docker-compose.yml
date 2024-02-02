@@ -4,9 +4,9 @@ services:
   image : mongo
   container_name: mongodb
   volumes:
-   - /mongodb/database:/data/db
+    - ./data:/data/db
   env_file:
-    - docker.env
+    - .env
   ports:
-   - 27017:27017
+    - "${MONGO_PORT}:27017"
   restart: unless-stopped

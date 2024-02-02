@@ -23,5 +23,3 @@ Explore the setup guides for different tools:
 - [RabbitMQ](https://github.com/nelsonvu/dockerized-dev-toolkit/blob/master/rabbitmq/README.md)
 
 - [Redis](https://github.com/nelsonvu/dockerized-dev-toolkit/blob/master/redis/README.md)
-
-## Contributing
