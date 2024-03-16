@@ -7,6 +7,7 @@ services:
      - "${POSTGRES_PORT}:5432"
     volumes:
      - ./data:/data/postgres
+    command: [ "postgres", "-c", "wal_level=logical" ]
     env_file:
      - .env
     restart: unless-stopped

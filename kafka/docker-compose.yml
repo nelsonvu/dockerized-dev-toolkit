@@ -1,7 +1,7 @@
 version: '2'
 services:
   zookeeper:
-    image: confluentinc/cp-zookeeper:latest
+    image: confluentinc/cp-zookeeper:7.4.1
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -9,7 +9,7 @@ services:
       - 2181:2181
 
   kafka:
-    image: confluentinc/cp-kafka:latest
+    image: confluentinc/cp-kafka:7.4.1
     depends_on:
       - zookeeper
     ports:
@@ -19,3 +19,100 @@ services:
       - ./data:/var/lib/kafka/data
     env_file:
       - .env
+  kafka-connect:
+    build: ./kafka-connect
+    container_name: kafka-connect
+    restart: unless-stopped
+    depends_on:
+      - schema-registry
+    ports:
+      - "8083:8083"
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: kafka:9092
+      CONNECT_REST_PORT: 8083
+      CONNECT_GROUP_ID: compose-connect-group
+      CONNECT_CONFIG_STORAGE_TOPIC: docker-connect-configs
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_OFFSET_STORAGE_TOPIC: docker-connect-offsets
+      CONNECT_OFFSET_STORAGE_PARTITIONS: 3
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_STATUS_STORAGE_TOPIC: docker-connect-status
+      CONNECT_STATUS_STORAGE_PARTITIONS: 3
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_KEY_CONVERTER: io.confluent.connect.avro.AvroConverter
+      CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      CONNECT_VALUE_CONVERTER: io.confluent.connect.avro.AvroConverter
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      CONNECT_INTERNAL_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_INTERNAL_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_REST_ADVERTISED_HOST_NAME: kafka-connect
+      CONNECT_LOG4J_ROOT_LOGLEVEL: INFO
+      CONNECT_LOG4J_LOGGERS: "org.apache.kafka.connect.runtime.rest=WARN,org.reflections=ERROR"
+      CONNECT_PLUGIN_PATH: "/usr/share/java"
+    healthcheck:
+      test: "curl -f http://localhost:$$CONNECT_REST_PORT || exit 1"
+
+  kafka-connect-ui:
+    image: landoop/kafka-connect-ui:0.9.7
+    container_name: kafka-connect-ui
+    restart: unless-stopped
+    depends_on:
+      - kafka-connect
+    ports:
+      - "8086:8000"
+    environment:
+      CONNECT_URL: http://kafka-connect:8083
+      PROXY: "true"
+    healthcheck:
+      test: "wget --quiet --tries=1 --spider http://localhost:8000 || exit 1"
+
+  schema-registry:
+    image: confluentinc/cp-schema-registry:7.4.1
+    container_name: schema-registry
+    restart: unless-stopped
+    depends_on:
+      - kafka
+    ports:
+      - "8081:8081"
+    environment:
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: kafka:9092
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+    healthcheck:
+      test: "curl -f http://localhost:8081 || exit 1"
+
+  schema-registry-ui:
+    image: landoop/schema-registry-ui:0.9.5
+    container_name: kafka-schema-registry-ui
+    restart: unless-stopped
+    depends_on:
+      - schema-registry
+    ports:
+      - "8001:8000"
+    environment:
+      SCHEMAREGISTRY_URL: http://schema-registry:8081
+      PROXY: "true"
+    healthcheck:
+      test: "wget --quiet --tries=1 --spider http://localhost:8000 || exit 1"
+  
+  # kafka-connect:
+  #   image: debezium/connect-with-oracle-jdbc:${DEBEZIUM_VERSION}
+  #   build:
+  #     context: debezium-with-oracle-jdbc
+  #     args:
+  #       DEBEZIUM_VERSION: ${DEBEZIUM_VERSION}
+  #   ports:
+  #    - 8083:8083
+  #    - 5005:5005
+  #   links:
+  #    - kafka
+  #   environment:
+  #    - BOOTSTRAP_SERVERS=kafka:9092
+  #    - GROUP_ID=1
+  #    - CONFIG_STORAGE_TOPIC=my_connect_configs
+  #    - OFFSET_STORAGE_TOPIC=my_connect_offsets
+  #    - STATUS_STORAGE_TOPIC=my_connect_statuses
+  #    - LD_LIBRARY_PATH=/instant_client
+  #    - KAFKA_DEBUG=true
+  #    - DEBUG_SUSPEND_FLAG=n
+  #    - JAVA_DEBUG_PORT=0.0.0.0:5005
