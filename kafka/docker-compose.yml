@@ -19,38 +19,6 @@ services:
       - ./data:/var/lib/kafka/data
     env_file:
       - .env
-  kafka-connect:
-    build: ./kafka-connect
-    container_name: kafka-connect
-    restart: unless-stopped
-    depends_on:
-      - schema-registry
-    ports:
-      - "8083:8083"
-    environment:
-      CONNECT_BOOTSTRAP_SERVERS: kafka:9092
-      CONNECT_REST_PORT: 8083
-      CONNECT_GROUP_ID: compose-connect-group
-      CONNECT_CONFIG_STORAGE_TOPIC: docker-connect-configs
-      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
-      CONNECT_OFFSET_STORAGE_TOPIC: docker-connect-offsets
-      CONNECT_OFFSET_STORAGE_PARTITIONS: 3
-      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
-      CONNECT_STATUS_STORAGE_TOPIC: docker-connect-status
-      CONNECT_STATUS_STORAGE_PARTITIONS: 3
-      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
-      CONNECT_KEY_CONVERTER: io.confluent.connect.avro.AvroConverter
-      CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
-      CONNECT_VALUE_CONVERTER: io.confluent.connect.avro.AvroConverter
-      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
-      CONNECT_INTERNAL_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
-      CONNECT_INTERNAL_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
-      CONNECT_REST_ADVERTISED_HOST_NAME: kafka-connect
-      CONNECT_LOG4J_ROOT_LOGLEVEL: INFO
-      CONNECT_LOG4J_LOGGERS: "org.apache.kafka.connect.runtime.rest=WARN,org.reflections=ERROR"
-      CONNECT_PLUGIN_PATH: "/usr/share/java"
-    healthcheck:
-      test: "curl -f http://localhost:$$CONNECT_REST_PORT || exit 1"
 
   kafka-connect-ui:
     image: landoop/kafka-connect-ui:0.9.7
@@ -95,24 +63,24 @@ services:
     healthcheck:
       test: "wget --quiet --tries=1 --spider http://localhost:8000 || exit 1"
   
-  # kafka-connect:
-  #   image: debezium/connect-with-oracle-jdbc:${DEBEZIUM_VERSION}
-  #   build:
-  #     context: debezium-with-oracle-jdbc
-  #     args:
-  #       DEBEZIUM_VERSION: ${DEBEZIUM_VERSION}
-  #   ports:
-  #    - 8083:8083
-  #    - 5005:5005
-  #   links:
-  #    - kafka
-  #   environment:
-  #    - BOOTSTRAP_SERVERS=kafka:9092
-  #    - GROUP_ID=1
-  #    - CONFIG_STORAGE_TOPIC=my_connect_configs
-  #    - OFFSET_STORAGE_TOPIC=my_connect_offsets
-  #    - STATUS_STORAGE_TOPIC=my_connect_statuses
-  #    - LD_LIBRARY_PATH=/instant_client
-  #    - KAFKA_DEBUG=true
-  #    - DEBUG_SUSPEND_FLAG=n
-  #    - JAVA_DEBUG_PORT=0.0.0.0:5005
+  kafka-connect:
+    image: debezium/connect-with-oracle-jdbc:${DEBEZIUM_VERSION}
+    build:
+      context: debezium-connect
+      args:
+        DEBEZIUM_VERSION: ${DEBEZIUM_VERSION}
+    ports:
+     - 8083:8083
+     - 5005:5005
+    links:
+     - kafka
+    environment:
+     - BOOTSTRAP_SERVERS=kafka:9092
+     - GROUP_ID=1
+     - CONFIG_STORAGE_TOPIC=my_connect_configs
+     - OFFSET_STORAGE_TOPIC=my_connect_offsets
+     - STATUS_STORAGE_TOPIC=my_connect_statuses
+     - LD_LIBRARY_PATH=/instant_client
+     - KAFKA_DEBUG=true
+     - DEBUG_SUSPEND_FLAG=n
+     - JAVA_DEBUG_PORT=0.0.0.0:5005
