@@ -1,13 +1,14 @@
-version: '3.8'
+version: '3.7'
 services:
   db:
-    image: arm64v8/mysql:oracle
-    command: --default-authentication-plugin=mysql_native_pas$
+    platform: linux/amd64
+    image: mysql:8-oracle
     restart: unless-stopped
+    # command: mysqld --initialize --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     env_file:
       - .env
+    volumes:
+      - ./data:/var/lib/mysql
+      - ./my.cnf:/etc/mysql/conf.d/my.cnf  # Mount the custom config
     ports:
       - "${MYSQL_PORT}:3306"
-    volumes:
-      - ./data:/usr/local/mysql
-      - ./data/init.sql:/docker-entrypoint-initdb.d$

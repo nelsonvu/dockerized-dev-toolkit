@@ -1,38 +1,32 @@
 version: '2'
 services:
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.4.1
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-    ports:
-      - 2181:2181
-
   kafka:
-    image: confluentinc/cp-kafka:7.4.1
-    depends_on:
-      - zookeeper
+    image: confluentinc/cp-kafka:latest
+    hostname: kafka
+    container_name: kafka
     ports:
-      - 29092:29092
-      - 29093:29093
-    volumes:
-      - ./data:/var/lib/kafka/data
-    env_file:
-      - .env
-
-  kafka-connect-ui:
-    image: landoop/kafka-connect-ui:0.9.7
-    container_name: kafka-connect-ui
-    restart: unless-stopped
-    depends_on:
-      - kafka-connect
-    ports:
-      - "8086:8000"
+      - "9092:9092"
+      - "9093:9093"
     environment:
-      CONNECT_URL: http://kafka-connect:8083
-      PROXY: "true"
-    healthcheck:
-      test: "wget --quiet --tries=1 --spider http://localhost:8000 || exit 1"
+      KAFKA_KRAFT_MODE: "true"
+      KAFKA_PROCESS_ROLES: controller,broker
+      KAFKA_NODE_ID: 1
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@192.168.1.159:9093"
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://192.168.1.159:9092
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_LOG_RETENTION_HOURS: 168
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_MAX_MESSAGE_BYTES: 2000000000 
+      CLUSTER_ID: "Mk3OEYBSD34fcwNTJENDM2Q"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./data:/var/lib/kafka/data
 
   schema-registry:
     image: confluentinc/cp-schema-registry:7.4.1
@@ -49,20 +43,6 @@ services:
     healthcheck:
       test: "curl -f http://localhost:8081 || exit 1"
 
-  schema-registry-ui:
-    image: landoop/schema-registry-ui:0.9.5
-    container_name: kafka-schema-registry-ui
-    restart: unless-stopped
-    depends_on:
-      - schema-registry
-    ports:
-      - "8001:8000"
-    environment:
-      SCHEMAREGISTRY_URL: http://schema-registry:8081
-      PROXY: "true"
-    healthcheck:
-      test: "wget --quiet --tries=1 --spider http://localhost:8000 || exit 1"
-  
   kafka-connect:
     image: debezium/connect-with-oracle-jdbc:${DEBEZIUM_VERSION}
     build:
@@ -74,6 +54,7 @@ services:
      - 5005:5005
     links:
      - kafka
+     - schema-registry
     environment:
      - BOOTSTRAP_SERVERS=kafka:9092
      - GROUP_ID=1
@@ -84,3 +65,15 @@ services:
      - KAFKA_DEBUG=true
      - DEBUG_SUSPEND_FLAG=n
      - JAVA_DEBUG_PORT=0.0.0.0:5005
+     - KEY_CONVERTER=io.confluent.connect.avro.AvroConverter
+     - VALUE_CONVERTER=io.confluent.connect.avro.AvroConverter
+     - CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL=http://schema-registry:8081
+     - CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL=http://schema-registry:8081
+
+  kafka-ui:
+    container_name: kafka-ui
+    image: provectuslabs/kafka-ui:latest
+    ports:
+      - 8082:8080
+    environment:
+      DYNAMIC_CONFIG_ENABLED: 'true'
